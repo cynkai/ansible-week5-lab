@@ -2,3 +2,4 @@ logs/
 collections/
 galaxy_roles/
 *.pass
+env.sh
