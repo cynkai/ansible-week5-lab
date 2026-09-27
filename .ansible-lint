@@ -14,3 +14,6 @@ exclude_paths:
   - import_test.yml
   - include_test.yml
   - include_apply_test.yml
+skip_list:
+  - yaml[comments]        # galaxy 자동생성 주석
+  - var-naming[no-role-prefix]  # app_version은 역할 공유 변수로 의도된 것

@@ -6,16 +6,16 @@
 
 - name: Detect current active color
   ansible.builtin.command: awk '/default_backend/{print $2}' /etc/haproxy/haproxy.cfg
-  register: hp_cur
+  register: haproxy_cur
   changed_when: false
   failed_when: false
 
 - name: Decide active color
   ansible.builtin.set_fact:
-    _hp_color: >-
+    haproxy_active: >-
       {{ haproxy_active_color if haproxy_active_color
-         else (hp_cur.stdout | regex_replace('_backend$', '')
-               if hp_cur.stdout in ['blue_backend', 'green_backend'] else 'blue') }}
+         else (haproxy_cur.stdout | regex_replace('_backend$', '')
+               if haproxy_cur.stdout in ['blue_backend', 'green_backend'] else 'blue') }}
 
 - name: Deploy haproxy config
   ansible.builtin.template:

@@ -1,7 +1,8 @@
 ---
 galaxy_info:
-  author: minjun
-  description: nginx static web app
+  author: minjun (cynkai)
+  description: week5 lab - webapp role
+  license: MIT
   min_ansible_version: "2.14"
 dependencies:
   - role: common

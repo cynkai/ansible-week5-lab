@@ -26,36 +26,9 @@ pipeline {
 
         stage('Lint') {
             steps {
-                sh 'ansible-lint site.yml deploy.yml roles/ || true'
+                sh 'ansible-lint site.yml deploy.yml roles/'
             }
         }
 
-        stage('Deploy') {
-            steps {
-                withCredentials([
-                    sshUserPrivateKey(credentialsId: 'ansible-ssh', keyFileVariable: 'SSH_KEY'),
-                    file(credentialsId: 'ansible-vault-dev', variable: 'VAULT_PASS')
-                ]) {
-                    sh '''
-                        : "${LIMIT:?LIMIT is empty - refusing to run against all hosts}"
-                        DRY_RUN="${DRY_RUN:-true}"
-
-                        EXTRA=""
-                        if [ -n "$TARGET_VERSION" ]; then
-                            EXTRA="$EXTRA -e app_version=$TARGET_VERSION"
-                        fi
-                        if [ -n "$TAGS" ]; then
-                            EXTRA="$EXTRA --tags $TAGS"
-                        fi
-
-                        ansible-playbook -i "$INV" deploy.yml \
-                            --private-key "$SSH_KEY" --vault-id dev@"$VAULT_PASS" \
-                            --limit "$LIMIT" \
-                            -e dry_run="$DRY_RUN" \
-                            $EXTRA
-                    '''
-                }
-            }
-        }
     }
 }

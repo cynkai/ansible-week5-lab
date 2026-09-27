@@ -12,7 +12,7 @@ defaults
 frontend http_in
     bind *:80
 {% if haproxy_mode == 'bluegreen' %}
-    default_backend {{ _hp_color }}_backend
+    default_backend {{ haproxy_active }}_backend
 {% else %}
     default_backend {{ haproxy_backend_name }}
 {% endif %}
