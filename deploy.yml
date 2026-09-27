@@ -1,0 +1,19 @@
+---
+- name: Parameterized deploy
+  hosts: "{{ target_hosts | default('web') }}"
+  gather_facts: false
+  serial: 1
+  vars:
+    dry_run: false
+  tasks:
+    - name: Show what will run
+      ansible.builtin.debug:
+        msg: >-
+          host={{ inventory_hostname }}
+          version={{ app_version }}
+          dry_run={{ dry_run }} (type={{ dry_run | type_debug }})
+
+    - name: Deploy webapp
+      ansible.builtin.include_role:
+        name: webapp
+      when: not (dry_run | bool)
