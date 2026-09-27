@@ -4,7 +4,7 @@
   gather_facts: false
   serial: 1
   vars:
-    dry_run: false
+    dry_run: "true"
   tasks:
     - name: Show what will run
       ansible.builtin.debug:
@@ -12,8 +12,10 @@
           host={{ inventory_hostname }}
           version={{ app_version }}
           dry_run={{ dry_run }} (type={{ dry_run | type_debug }})
+      tags: always
 
     - name: Deploy webapp
       ansible.builtin.include_role:
         name: webapp
-      when: not (dry_run | bool)
+      when: (dry_run | string | lower) == 'false'
+      tags: deploy
