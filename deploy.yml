@@ -17,5 +17,7 @@
     - name: Deploy webapp
       ansible.builtin.include_role:
         name: webapp
+        apply:
+          tags: deploy
       when: (dry_run | string | lower) == 'false'
       tags: deploy
