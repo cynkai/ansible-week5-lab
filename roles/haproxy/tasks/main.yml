@@ -1,0 +1,33 @@
+---
+- name: Install haproxy
+  ansible.builtin.apt:
+    name: haproxy
+    state: present
+
+- name: Detect current active color
+  ansible.builtin.command: awk '/default_backend/{print $2}' /etc/haproxy/haproxy.cfg
+  register: hp_cur
+  changed_when: false
+  failed_when: false
+
+- name: Decide active color
+  ansible.builtin.set_fact:
+    _hp_color: >-
+      {{ haproxy_active_color if haproxy_active_color
+         else (hp_cur.stdout | regex_replace('_backend$', '')
+               if hp_cur.stdout in ['blue_backend', 'green_backend'] else 'blue') }}
+
+- name: Deploy haproxy config
+  ansible.builtin.template:
+    src: haproxy.cfg.j2
+    dest: /etc/haproxy/haproxy.cfg
+    owner: root
+    group: haproxy
+    mode: "0640"
+    validate: haproxy -c -f %s
+  notify: Reload haproxy
+
+- name: Ensure haproxy is running
+  ansible.builtin.service:
+    name: haproxy
+    state: started

@@ -1,0 +1,52 @@
+---
+- name: Detect active color
+  hosts: lb
+  gather_facts: false
+  tasks:
+    - name: Read current default_backend
+      ansible.builtin.command: awk '/default_backend/{print $2}' /etc/haproxy/haproxy.cfg
+      register: cur
+      changed_when: false
+
+    - name: Set colors
+      ansible.builtin.set_fact:
+        active_color: "{{ cur.stdout | regex_replace('_backend$', '') }}"
+        idle_color: "{{ 'green' if cur.stdout.startswith('blue') else 'blue' }}"
+
+    - name: Show plan
+      ansible.builtin.debug:
+        msg: "active={{ active_color }} -> deploying to {{ idle_color }}"
+
+- name: Deploy to idle color
+  hosts: "{{ hostvars[groups['lb'][0]].idle_color }}"
+  gather_facts: false
+  any_errors_fatal: true
+  tasks:
+    - name: Deploy new version
+      ansible.builtin.include_role:
+        name: webapp
+      vars:
+        app_version: "{{ target_version }}"
+
+    - name: Health check from LB
+      ansible.builtin.uri:
+        url: "http://{{ inventory_hostname }}/health"
+        return_content: true
+      register: health
+      until: health.content is defined and health.content.strip() == 'ok ' ~ target_version
+      retries: 3
+      delay: 2
+      delegate_to: "{{ groups['lb'][0] }}"
+
+- name: Switch traffic
+  hosts: lb
+  gather_facts: false
+  tasks:
+    - name: Point frontend to idle color
+      ansible.builtin.include_role:
+        name: haproxy
+      vars:
+        haproxy_active_color: "{{ idle_color }}"
+
+    - name: Apply now
+      ansible.builtin.meta: flush_handlers

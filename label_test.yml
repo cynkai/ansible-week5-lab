@@ -1,0 +1,17 @@
+---
+- name: Vault ID label test
+  hosts: localhost
+  connection: local
+  gather_facts: false
+  vars_files:
+    - label_vars.yml
+  tasks:
+    - name: Read dev secret
+      ansible.builtin.debug:
+        var: dev_secret
+      ignore_errors: true
+
+    - name: Read prod secret
+      ansible.builtin.debug:
+        var: prod_secret
+      ignore_errors: true

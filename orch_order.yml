@@ -1,0 +1,14 @@
+---
+- name: Completion order test
+  hosts: all
+  gather_facts: false
+  vars:
+    s1: {node1: 5, node2: 3, node3: 1}
+  tasks:
+    - name: Step 1
+      ansible.builtin.shell: "sleep {{ s1[inventory_hostname] }}; echo {{ inventory_hostname }}-step1"
+      changed_when: false
+
+    - name: Step 2
+      ansible.builtin.shell: "sleep 1; echo {{ inventory_hostname }}-step2"
+      changed_when: false

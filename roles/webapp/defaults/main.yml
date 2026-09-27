@@ -1,0 +1,4 @@
+---
+app_version: "1.0"
+webapp_port: 80
+webapp_no_log: false

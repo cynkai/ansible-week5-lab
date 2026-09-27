@@ -1,0 +1,8 @@
+---
+haproxy_backend_group: web
+haproxy_backend_name: web_backend
+haproxy_backend_port: 80
+haproxy_stats_user: admin
+haproxy_stats_password: ""
+haproxy_mode: rolling
+haproxy_active_color: ""

@@ -1,0 +1,10 @@
+---
+- name: Web servers
+  hosts: web
+  roles:
+    - webapp
+
+- name: Load balancer
+  hosts: lb
+  roles:
+    - haproxy

@@ -1,0 +1,32 @@
+---
+- name: Week4 no_log recheck (per task)
+  hosts: node1
+  gather_facts: false
+  vars:
+    w4_secret: "SuperSecret123"
+  tasks:
+    - name: 1. plain debug
+      ansible.builtin.debug:
+        msg: "password is {{ w4_secret }}"
+      tags: t1
+
+    - name: 2. debug with no_log
+      ansible.builtin.debug:
+        msg: "password is {{ w4_secret }}"
+      no_log: true
+      tags: t2
+
+    - name: 3. failing command with no_log
+      ansible.builtin.command: /bin/false
+      environment:
+        SECRET: "{{ w4_secret }}"
+      no_log: true
+      ignore_errors: true
+      tags: t3
+
+    - name: 4. copy content without no_log
+      ansible.builtin.copy:
+        content: "db_password={{ w4_secret }}\n"
+        dest: /tmp/w4.conf
+        mode: "0644"
+      tags: t4

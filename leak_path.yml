@@ -1,0 +1,32 @@
+---
+- name: Compare secret delivery paths
+  hosts: node1
+  gather_facts: false
+  tasks:
+    - name: Cleanup
+      ansible.builtin.file:
+        path: "/tmp/{{ item }}.conf"
+        state: absent
+      loop: [t, c, s]
+      tags: always
+
+    - name: Via template (rendered file transfer)
+      ansible.builtin.template:
+        src: roles/webapp/templates/app.conf.j2
+        dest: /tmp/t.conf
+        mode: "0600"
+      no_log: "{{ nl | default(false) }}"
+      tags: tmpl
+
+    - name: Via copy content (module argument)
+      ansible.builtin.copy:
+        content: "db_password={{ db_password }}\n"
+        dest: /tmp/c.conf
+        mode: "0600"
+      no_log: "{{ nl | default(false) }}"
+      tags: copy
+
+    - name: Via shell (command string)
+      ansible.builtin.shell: "echo db_password={{ db_password }} > /tmp/s.conf"
+      no_log: "{{ nl | default(false) }}"
+      tags: shell

@@ -1,0 +1,14 @@
+---
+- name: Failure policy (any_errors_fatal=true)
+  hosts: all
+  gather_facts: false
+  any_errors_fatal: true
+  tasks:
+    - name: Step 1 (fails on node2)
+      ansible.builtin.command: /bin/true
+      failed_when: inventory_hostname == 'node2'
+      changed_when: false
+
+    - name: Step 2
+      ansible.builtin.command: /bin/true
+      changed_when: false

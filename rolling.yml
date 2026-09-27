@@ -1,0 +1,51 @@
+---
+- name: Rolling deploy
+  hosts: web
+  gather_facts: false
+  serial: "{{ batch | default(1) }}"
+  max_fail_percentage: 0
+  vars:
+    lb_host: "{{ groups['lb'][0] }}"
+    lb_backend: web_backend
+    lb_socket: /run/haproxy/admin.sock
+    skip_lb: false
+    simulate_restart: false
+
+  pre_tasks:
+    - name: Disable in LB
+      community.general.haproxy:
+        state: disabled
+        host: "{{ inventory_hostname }}"
+        backend: "{{ lb_backend }}"
+        socket: "{{ lb_socket }}"
+      delegate_to: "{{ lb_host }}"
+      when: not (skip_lb | bool)
+
+  roles:
+    - webapp
+
+  tasks:
+    - name: Simulate app restart
+      ansible.builtin.shell: service nginx stop && sleep 4 && service nginx start
+      when: simulate_restart | bool
+
+  post_tasks:
+    - name: Health check from LB
+      ansible.builtin.uri:
+        url: "http://{{ inventory_hostname }}/health"
+        return_content: true
+      register: health
+      until: health.content is defined and health.content.strip() == 'ok ' ~ app_version
+      retries: 5
+      delay: 2
+      delegate_to: "{{ lb_host }}"
+
+    - name: Enable in LB
+      community.general.haproxy:
+        state: enabled
+        host: "{{ inventory_hostname }}"
+        backend: "{{ lb_backend }}"
+        socket: "{{ lb_socket }}"
+        wait: true
+      delegate_to: "{{ lb_host }}"
+      when: not (skip_lb | bool)

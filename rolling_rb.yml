@@ -1,0 +1,91 @@
+---
+- name: Rolling deploy with rollback
+  hosts: web
+  gather_facts: false
+  serial: "{{ batch | default(1) }}"
+  max_fail_percentage: 0
+  vars:
+    lb_host: "{{ groups['lb'][0] }}"
+    lb_backend: web_backend
+    lb_socket: /run/haproxy/admin.sock
+    abort_on_rollback: true
+
+  pre_tasks:
+    - name: Record current version
+      ansible.builtin.uri:
+        url: "http://{{ inventory_hostname }}/health"
+        return_content: true
+      register: before
+      delegate_to: "{{ lb_host }}"
+
+    - name: Save previous version
+      ansible.builtin.set_fact:
+        prev_version: "{{ before.content.strip() | regex_replace('^ok ', '') }}"
+
+    - name: Disable in LB
+      community.general.haproxy:
+        state: disabled
+        host: "{{ inventory_hostname }}"
+        backend: "{{ lb_backend }}"
+        socket: "{{ lb_socket }}"
+      delegate_to: "{{ lb_host }}"
+
+  tasks:
+    - name: Deploy with rollback
+      block:
+        - name: Deploy new version
+          ansible.builtin.include_role:
+            name: webapp
+          vars:
+            app_version: "{{ target_version }}"
+
+        - name: Health check new version
+          ansible.builtin.uri:
+            url: "http://{{ inventory_hostname }}/health"
+            return_content: true
+          register: health
+          until: health.content is defined and health.content.strip() == 'ok ' ~ target_version
+          retries: 3
+          delay: 2
+          delegate_to: "{{ lb_host }}"
+
+      rescue:
+        - name: Roll back to previous version
+          ansible.builtin.include_role:
+            name: webapp
+          vars:
+            app_version: "{{ prev_version }}"
+
+        - name: Health check previous version
+          ansible.builtin.uri:
+            url: "http://{{ inventory_hostname }}/health"
+            return_content: true
+          register: health_rb
+          until: health_rb.content is defined and health_rb.content.strip() == 'ok ' ~ prev_version
+          retries: 3
+          delay: 2
+          delegate_to: "{{ lb_host }}"
+
+        - name: Re-enable after rollback
+          community.general.haproxy:
+            state: enabled
+            host: "{{ inventory_hostname }}"
+            backend: "{{ lb_backend }}"
+            socket: "{{ lb_socket }}"
+            wait: true
+          delegate_to: "{{ lb_host }}"
+
+        - name: Abort rollout
+          ansible.builtin.fail:
+            msg: "{{ inventory_hostname }} rolled back to {{ prev_version }}; aborting rollout"
+          when: abort_on_rollback | bool
+
+  post_tasks:
+    - name: Enable in LB
+      community.general.haproxy:
+        state: enabled
+        host: "{{ inventory_hostname }}"
+        backend: "{{ lb_backend }}"
+        socket: "{{ lb_socket }}"
+        wait: true
+      delegate_to: "{{ lb_host }}"

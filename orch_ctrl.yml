@@ -1,0 +1,29 @@
+---
+- name: throttle, run_once, delegate_to
+  hosts: web
+  gather_facts: false
+  tasks:
+    - name: Throttled step
+      ansible.builtin.command: sleep 2
+      changed_when: false
+      throttle: 1
+
+    - name: Run once
+      ansible.builtin.command: hostname
+      register: once
+      run_once: true
+      changed_when: false
+
+    - name: Show run_once result
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} sees result from {{ once.stdout }}"
+
+    - name: LB checks each backend
+      ansible.builtin.command: "curl -s http://{{ inventory_hostname }}/health"
+      delegate_to: node3
+      register: hc
+      changed_when: false
+
+    - name: Show health result
+      ansible.builtin.debug:
+        msg: "{{ inventory_hostname }} via node3: {{ hc.stdout }}"

@@ -1,0 +1,42 @@
+---
+- name: Install nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+
+- name: Deploy site config
+  ansible.builtin.copy:
+    src: default.conf
+    dest: /etc/nginx/sites-available/default
+    mode: "0644"
+  notify: Reload nginx
+
+- name: Deploy index page
+  ansible.builtin.template:
+    src: index.html.j2
+    dest: /var/www/html/index.html
+    mode: "0644"
+
+- name: Deploy health file
+  ansible.builtin.template:
+    src: health.txt.j2
+    dest: /var/www/html/health.txt
+    mode: "0644"
+
+- name: Ensure nginx is running
+  ansible.builtin.service:
+    name: nginx
+    state: started
+
+- name: Create app config directory
+  ansible.builtin.file:
+    path: /etc/webapp
+    state: directory
+    mode: "0750"
+
+- name: Deploy app config
+  ansible.builtin.template:
+    src: app.conf.j2
+    dest: /etc/webapp/app.conf
+    mode: "0600"
+  no_log: "{{ webapp_no_log }}"

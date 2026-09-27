@@ -1,0 +1,15 @@
+---
+- name: Strategy and forks test
+  hosts: all
+  gather_facts: false
+  vars:
+    step1: {node1: 5, node2: 3, node3: 1}
+    step2: {node1: 1, node2: 3, node3: 5}
+  tasks:
+    - name: Step 1
+      ansible.builtin.command: "sleep {{ step1[inventory_hostname] }}"
+      changed_when: false
+
+    - name: Step 2
+      ansible.builtin.command: "sleep {{ step2[inventory_hostname] }}"
+      changed_when: false

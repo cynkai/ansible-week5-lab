@@ -1,0 +1,46 @@
+global
+    stats socket /run/haproxy/admin.sock mode 660 level admin
+    stats timeout 30s
+    daemon
+
+defaults
+    mode http
+    timeout connect 5s
+    timeout client 30s
+    timeout server 30s
+
+frontend http_in
+    bind *:80
+{% if haproxy_mode == 'bluegreen' %}
+    default_backend {{ _hp_color }}_backend
+{% else %}
+    default_backend {{ haproxy_backend_name }}
+{% endif %}
+
+{% if haproxy_mode == 'bluegreen' %}
+{% for color in ['blue', 'green'] %}
+backend {{ color }}_backend
+    balance roundrobin
+    option httpchk GET /health
+{% for host in groups[color] %}
+    server {{ host }} {{ host }}:{{ haproxy_backend_port }} check
+{% endfor %}
+
+{% endfor %}
+{% else %}
+backend {{ haproxy_backend_name }}
+    balance roundrobin
+    option httpchk GET /health
+{% for host in groups[haproxy_backend_group] %}
+    server {{ host }} {{ host }}:{{ haproxy_backend_port }} check
+{% endfor %}
+{% endif %}
+
+listen stats
+    bind *:8404
+    stats enable
+    stats uri /stats
+    stats refresh 2s
+{% if haproxy_stats_password %}
+    stats auth {{ haproxy_stats_user }}:{{ haproxy_stats_password }}
+{% endif %}

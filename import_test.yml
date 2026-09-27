@@ -1,0 +1,9 @@
+---
+- name: import_role test
+  hosts: web
+  gather_facts: false
+  tasks:
+    - name: Import webapp
+      ansible.builtin.import_role:
+        name: webapp
+      tags: deploy

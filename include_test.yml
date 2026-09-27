@@ -1,0 +1,9 @@
+---
+- name: include_role test
+  hosts: web
+  gather_facts: false
+  tasks:
+    - name: Include webapp
+      ansible.builtin.include_role:
+        name: webapp
+      tags: deploy
