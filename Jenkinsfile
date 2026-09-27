@@ -24,6 +24,12 @@ pipeline {
             }
         }
 
+        stage('Lint') {
+            steps {
+                sh 'ansible-lint site.yml deploy.yml roles/ || true'
+            }
+        }
+
         stage('Deploy') {
             steps {
                 withCredentials([

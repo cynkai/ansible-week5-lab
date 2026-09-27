@@ -1,0 +1,16 @@
+---
+exclude_paths:
+  - collections/
+  - galaxy_roles/
+  - week4_recheck.yml
+  - leak_path.yml
+  - vault_test.yml
+  - label_test.yml
+  - orch_test.yml
+  - orch_order.yml
+  - orch_ctrl.yml
+  - orch_fail_false.yml
+  - orch_fail_true.yml
+  - import_test.yml
+  - include_test.yml
+  - include_apply_test.yml
