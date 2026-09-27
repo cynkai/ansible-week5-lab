@@ -23,6 +23,22 @@ pipeline {
             }
         }
 
+        stage('Diagnose key') {
+            steps {
+                withCredentials([sshUserPrivateKey(credentialsId: 'ansible-ssh', keyFileVariable: 'SSH_KEY')]) {
+                    sh '''
+                        ls -l "$SSH_KEY"
+                        head -1 "$SSH_KEY"
+                        tail -1 "$SSH_KEY"
+                        printf 'last byte: '; tail -c 1 "$SSH_KEY" | od -An -c
+                        printf 'CR count: '; tr -cd '\\r' < "$SSH_KEY" | wc -c
+                        wc -l < "$SSH_KEY"
+                        ssh-keygen -l -f "$SSH_KEY" || true
+                    '''
+                }
+            }
+        }
+
         stage('Ping') {
             steps {
                 withCredentials([
