@@ -13,6 +13,7 @@ Ansible 5주차 실습: roles, vault, orchestration, rolling/blue-green 배포�
 | Orchestration (순서·실패 처리) | `orch_*.yml` |
 | Rolling / 롤백 | `rolling.yml`, `rolling_rb.yml` |
 | Blue-Green 전환 | `bluegreen.yml`, `bg_switch.yml` |
+| SSH 파이프라이닝 성능 테스트 | `perf.yml` |
 | Jenkins 파이프라인 (파라미터 · ansible-lint 게이트 · fail-closed 배포) | `Jenkinsfile`, `jenkins-agent/Dockerfile`, `.ansible-lint` |
 
 실습 노드는 로컬 Docker 컨테이너(`127.0.0.1:2221`~`2225`)였습니다.
