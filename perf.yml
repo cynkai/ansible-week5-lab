@@ -1,0 +1,11 @@
+---
+- name: Pipelining perf test
+  hosts: web
+  gather_facts: false
+  tasks:
+    - name: Touch file {{ item }}
+      ansible.builtin.file:
+        path: "/tmp/perf-{{ item }}"
+        state: touch
+        mode: "0644"
+      loop: [1, 2, 3, 4, 5, 6, 7, 8]
